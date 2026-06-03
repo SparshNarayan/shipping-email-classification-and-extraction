@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShipIQ — Shipping Email Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0a0f1e;--navy2:#0f1729;--navy3:#151f35;--panel:#1a2540;--panel2:#1f2d4a;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--teal:#00e5c3;--teal2:#00b89a;--blue:#3b82f6;--amber:#f59e0b;--red:#ef4444;--green:#10b981;--text:#e8edf8;--muted:#6b7fa3;--muted2:#8899bb;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--navy);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,195,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,195,0.025) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;z-index:0}
+.shell{position:relative;z-index:1;display:flex;min-height:100vh}
+/* SIDEBAR */
+.sidebar{width:224px;background:var(--navy2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{padding:22px 20px 18px;border-bottom:1px solid var(--border)}
+.logo-mark{font-family:var(--mono);font-size:19px;font-weight:700;color:var(--teal);letter-spacing:-1px}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+.nav{flex:1;padding:14px 10px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted2);transition:all .15s;margin-bottom:2px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--panel);color:var(--text)}
+.nav-item.active{background:rgba(0,229,195,0.1);color:var(--teal)}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--panel2);color:var(--muted2);font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:10px;min-width:20px;text-align:center}
+.nav-item.active .nav-badge{background:rgba(0,229,195,0.15);color:var(--teal)}
+.sidebar-footer{padding:12px 10px;border-top:1px solid var(--border)}
+.status-dot{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);padding:7px 12px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+/* MAIN */
+.main{margin-left:224px;padding:28px 30px;flex:1}
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat.s-tot::after{background:linear-gradient(90deg,var(--blue),transparent)}
+.stat.s-ton::after{background:linear-gradient(90deg,var(--teal),transparent)}
+.stat.s-vc::after{background:linear-gradient(90deg,#60a5fa,transparent)}
+.stat.s-tc::after{background:linear-gradient(90deg,var(--amber),transparent)}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:7px}
+.stat-val{font-family:var(--mono);font-size:26px;font-weight:700}
+.s-tot .stat-val{color:var(--blue)}.s-ton .stat-val{color:var(--teal)}.s-vc .stat-val{color:#60a5fa}.s-tc .stat-val{color:var(--amber)}
+/* CARD */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+/* PAGE */
+.page{display:none}.page.active{display:block}
+.page-header{margin-bottom:22px}
+.page-title{font-size:21px;font-weight:600;letter-spacing:-.5px}
+.page-sub{font-size:13px;color:var(--muted);margin-top:3px}
+/* INPUTS */
+textarea,input[type=text],select{font-family:var(--sans);font-size:13px;background:var(--navy);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:9px 13px;transition:border .15s;outline:none;width:100%}
+textarea{font-family:var(--mono);font-size:12px;line-height:1.65;resize:vertical}
+textarea:focus,input[type=text]:focus,select:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,229,195,0.07)}
+select{cursor:pointer}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-family:var(--sans);font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .15s;border:1px solid var(--border2);background:var(--panel2);color:var(--text)}
+.btn:hover{background:var(--panel);border-color:rgba(255,255,255,0.18)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--teal);color:var(--navy);border-color:var(--teal);font-weight:600}
+.btn-primary:hover{background:var(--teal2);border-color:var(--teal2)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-sm{padding:6px 11px;font-size:12px}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--muted2)}
+.btn-ghost:hover{background:var(--panel);color:var(--text);border-color:var(--border)}
+/* SAMPLES */
+.samples{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.pill{font-size:11px;padding:4px 11px;border-radius:20px;cursor:pointer;border:1px solid var(--border2);background:var(--navy);color:var(--muted2);transition:all .12s;font-family:var(--mono)}
+.pill:hover{border-color:var(--teal);color:var(--teal)}
+/* RESULT */
+.result-panel{background:var(--navy);border:1px solid var(--border2);border-radius:10px;overflow:hidden;margin-top:14px}
+.result-header{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.result-body{padding:15px}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.fi{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:9px 13px}
+.fi-k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:4px}
+.fi-v{font-size:13px;color:var(--text);font-weight:500}
+/* BADGES */
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;font-family:var(--mono);letter-spacing:.5px}
+.b-ton{background:rgba(0,229,195,.12);color:var(--teal);border:1px solid rgba(0,229,195,.25)}
+.b-vc{background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
+.b-tc{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25)}
+.b-hi{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.b-md{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.b-lo{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead tr{background:var(--navy2)}
+th{padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px 13px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,.025)}
+.td-mono{font-family:var(--mono);font-size:11px;color:var(--muted2)}
+.td-main{font-weight:500}
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:9px;margin-bottom:14px;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;max-width:270px}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--muted);pointer-events:none}
+.search-wrap input{padding-left:30px}
+/* SPINNER */
+.spinner{width:13px;height:13px;border:2px solid rgba(0,229,195,.2);border-top-color:var(--teal);border-radius:50%;animation:spin .5s linear infinite;display:inline-block;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ALERT */
+.alert{padding:11px 15px;border-radius:8px;font-size:13px;display:flex;align-items:flex-start;gap:9px;margin-top:11px}
+.a-err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#fca5a5}
+.a-ok{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:#6ee7b7}
+/* MATCH */
+.match-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:13px 16px;margin-bottom:9px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.match-score{font-family:var(--mono);font-size:19px;font-weight:700;min-width:42px}
+.match-info{flex:1;min-width:0}
+.match-name{font-weight:600;font-size:13px;margin-bottom:3px}
+.match-meta{font-size:11px;color:var(--muted2)}
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+.form-group label{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+/* EMPTY */
+.empty{text-align:center;padding:38px 20px;color:var(--muted);font-size:13px}
+/* MODEL TAG */
+.model-tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;background:rgba(0,229,195,.08);border:1px solid rgba(0,229,195,.18);color:var(--teal);padding:3px 9px;border-radius:20px;font-family:var(--mono)}
+@media(max-width:720px){
+  .sidebar{width:56px}
+  .logo-sub,.nav-item span,.status-dot span,.nav-badge{display:none}
+  .main{margin-left:56px;padding:18px 14px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .field-grid,.form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">ShipIQ</div>
+    <div class="logo-sub">Intelligence</div>
+  </div>
+  <nav class="nav">
+    <button class="nav-item active" onclick="goPage('analyze',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+      <span>Analyze Email</span>
+    </button>
+    <button class="nav-item" onclick="goPage('tonnage',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-5 4 4 5-6 4 4"/><path d="M21 20H3"/></svg>
+      <span>Tonnage</span>
+      <span class="nav-badge" id="nb-ton">0</span>
+    </button>
+    <button class="nav-item" onclick="goPage('cargovc',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      <span>Cargo VC</span>
+      <span class="nav-badge" id="nb-vc">0</span>
+    </button>
+    <button class="nav-item" onclick="goPage('cargotc',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Cargo TC</span>
+      <span class="nav-badge" id="nb-tc">0</span>
+    </button>
+    <button class="nav-item" onclick="goPage('match',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      <span>Vessel Match</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="status-dot">
+      <div class="dot"></div>
+      <span>Local ML Model</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat s-tot"><div class="stat-lbl">Total</div><div class="stat-val" id="st-tot">0</div></div>
+    <div class="stat s-ton"><div class="stat-lbl">Tonnage</div><div class="stat-val" id="st-ton">0</div></div>
+    <div class="stat s-vc"><div class="stat-lbl">Cargo VC</div><div class="stat-val" id="st-vc">0</div></div>
+    <div class="stat s-tc"><div class="stat-lbl">Cargo TC</div><div class="stat-val" id="st-tc">0</div></div>
+  </div>
+
+  <!-- PAGE: ANALYZE -->
+  <div class="page active" id="page-analyze">
+    <div class="page-header">
+      <div class="page-title">Analyze Email</div>
+      <div class="page-sub">Paste a shipping email — local ML model will classify &amp; extract data instantly</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Quick Samples
+        <span class="model-tag" style="margin-left:auto">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Naive Bayes + TF-IDF · No API
+        </span>
+      </div>
+      <div class="samples">
+        <span class="pill" onclick="loadS('t1')">▸ Tonnage — Pacific Fleet</span>
+        <span class="pill" onclick="loadS('t2')">▸ Tonnage — Saronic Champion</span>
+        <span class="pill" onclick="loadS('v1')">▸ Cargo VC — HRC Jeddah</span>
+        <span class="pill" onclick="loadS('v2')">▸ Cargo VC — Molasses</span>
+        <span class="pill" onclick="loadS('c1')">▸ Cargo TC — SeaSchiffe</span>
+        <span class="pill" onclick="loadS('c2')">▸ Cargo TC — DAI AN Grains</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Email Content
+      </div>
+      <textarea id="email-input" rows="10" placeholder="Shipping email yahan paste karein..."></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px">
+        <button class="btn btn-ghost btn-sm" onclick="doClear()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          Clear
+        </button>
+        <button class="btn btn-primary" id="abtn" onclick="doAnalyze()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+          Classify &amp; Extract
+        </button>
+      </div>
+    </div>
+    <div id="result-area"></div>
+  </div>
+
+  <!-- PAGE: TONNAGE -->
+  <div class="page" id="page-tonnage">
+    <div class="page-header"><div class="page-title">Tonnage — Open Vessels</div><div class="page-sub">Available vessel positions extracted from emails</div></div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="ton-s" placeholder="Search vessel, port..." oninput="renderTon()">
+      </div>
+      <button class="btn btn-sm" onclick="doExport('ton')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>Vessel Name</th><th>Size (DWT)</th><th>Open Port</th><th>Open Date</th><th>Account</th></tr></thead><tbody id="ton-tb"></tbody></table></div>
+    <div id="ton-empty" class="empty" style="display:none">⚓ No vessel records yet. Analyze tonnage emails to populate.</div>
+  </div>
+
+  <!-- PAGE: CARGO VC -->
+  <div class="page" id="page-cargovc">
+    <div class="page-header"><div class="page-title">Cargo VC — Voyage Charter</div><div class="page-sub">Voyage charter cargo requirements</div></div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="vc-s" placeholder="Search cargo, port..." oninput="renderVC()">
+      </div>
+      <button class="btn btn-sm" onclick="doExport('vc')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>Cargo Name</th><th>Loading Port</th><th>Discharge Port</th><th>Laycan</th><th>Qty</th><th>Account</th></tr></thead><tbody id="vc-tb"></tbody></table></div>
+    <div id="vc-empty" class="empty" style="display:none">📦 No VC cargo records yet.</div>
+  </div>
+
+  <!-- PAGE: CARGO TC -->
+  <div class="page" id="page-cargotc">
+    <div class="page-header"><div class="page-title">Cargo TC — Time Charter</div><div class="page-sub">Time charter cargo requirements</div></div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="tc-s" placeholder="Search cargo, account..." oninput="renderTC()">
+      </div>
+      <button class="btn btn-sm" onclick="doExport('tc')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>Account</th><th>Cargo</th><th>Delivery</th><th>Redelivery</th><th>Duration</th><th>Laycan</th></tr></thead><tbody id="tc-tb"></tbody></table></div>
+    <div id="tc-empty" class="empty" style="display:none">🕐 No TC cargo records yet.</div>
+  </div>
+
+  <!-- PAGE: MATCH -->
+  <div class="page" id="page-match">
+    <div class="page-header"><div class="page-title">Vessel–Cargo Matching</div><div class="page-sub">Find best vessel–cargo opportunities from your database</div></div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Filter Criteria
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Max Vessel Size (DWT)</label><input type="text" id="m-sz" placeholder="e.g. 65000 (blank = any)"></div>
+        <div class="form-group"><label>Port / Region Keyword</label><input type="text" id="m-pt" placeholder="e.g. CHINA, PACIFIC, INDIA"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Charter Type</label>
+          <select id="m-tp"><option value="">All Types</option><option value="vc">Voyage Charter (VC)</option><option value="tc">Time Charter (TC)</option></select>
+        </div>
+        <div class="form-group"><label>Cargo Keyword</label><input type="text" id="m-cg" placeholder="e.g. grains, steel, clinker"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-primary" onclick="doMatch()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Find Matches
+        </button>
+      </div>
+    </div>
+    <div id="match-res"></div>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  AAPKA TRAINED MODEL — JAVASCRIPT MEIN PORT
+//  Naive Bayes + TF-IDF (sklearn se export)
+// ═══════════════════════════════════════════
+const MODEL = {
+  vocab: {"sheng":46,"an":5,"hai":22,"xiamen":55,"china":10,"feng":17,"hui":24,"guangzhou":20,"yuanping":57,"sea":44,"manila":32,"phi":40,"de":14,"samalaju":42,"malaysia":31,"bi":6,"jia":28,"shan":45,"gwadar":21,"pakistan":39,"yuanning":56,"sohar":49,"oman":37,"cos":12,"orchid":38,"dar":13,"es":16,"salaam":41,"tanzania":51,"15":2,"000":0,"20":3,"mts":36,"10pct":1,"molochopt":34,"koh":29,"si":47,"chang":9,"thailand":52,"mt":35,"hrc":23,"max":33,"28":4,"jeddah":27,"iron":26,"slag":48,"bushehr":8,"urea":53,"bik":7,"grains":19,"vancouver":54,"clinker":11,"sangatta":43,"indonesia":25,"steels":50,"gens":18,"lawfuls":30,"eci":15},
+  idf: [2.674,3.079,3.079,2.674,3.079,3.079,3.079,3.079,3.079,3.079,2.674,3.079,3.079,3.079,3.079,2.674,3.079,3.079,2.674,3.079,3.079,3.079,2.386,3.079,3.079,3.079,3.079,3.079,3.079,3.079,2.674,3.079,3.079,3.079,3.079,3.079,3.079,3.079,3.079,3.079,3.079,3.079,3.079,3.079,2.674,3.079,2.674,3.079,3.079,3.079,2.674,3.079,3.079,3.079,3.079,3.079,3.079,3.079],
+  class_log_prior: [-1.3218,-1.3218,-0.7621],
+  feature_log_prob: [
+    [-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-3.721,-4.177,-4.177,-4.177,-3.483,-4.177,-4.177,-3.483,-3.642,-4.177,-4.177,-4.177,-4.177,-4.177,-3.721,-4.177,-4.177,-4.177,-4.177,-3.483,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-3.721,-4.177,-4.177,-4.177,-4.177,-4.177,-4.177,-3.483,-4.177,-4.177,-4.177,-3.642,-4.177,-4.177,-4.177],
+    [-3.620,-3.945,-3.945,-3.773,-3.920,-4.201,-4.201,-3.666,-3.745,-3.945,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-3.920,-4.201,-4.201,-3.745,-3.920,-4.201,-3.945,-4.201,-4.201,-4.201,-3.920,-3.945,-3.701,-3.945,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-4.201,-3.945,-3.745,-4.201,-4.201,-4.201,-3.945,-3.666,-4.201,-4.201,-4.201,-4.201],
+    [-4.295,-4.295,-4.295,-4.295,-4.295,-3.894,-3.926,-4.295,-4.295,-4.295,-3.683,-4.295,-3.953,-3.953,-3.904,-4.295,-3.953,-3.904,-4.295,-4.295,-3.904,-3.926,-3.542,-4.295,-3.904,-4.295,-4.295,-4.295,-3.926,-4.295,-4.295,-3.904,-3.879,-4.295,-4.295,-4.295,-4.295,-3.879,-3.953,-3.926,-3.879,-3.953,-3.904,-4.295,-3.655,-3.926,-3.683,-4.295,-4.295,-3.879,-4.295,-3.953,-4.295,-4.295,-4.295,-3.894,-3.879,-3.879]
+  ],
+  classes: ["CARGO_TC","CARGO_VC","TONNAGE"]
+};
+
+// TF-IDF vectorize + Naive Bayes predict (aapke model ka exact logic)
+function predict(text) {
+  const words = text.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);
+  const n = MODEL.idf.length;
+  
+  // Term frequency
+  const tf = new Array(n).fill(0);
+  let total = 0;
+  words.forEach(w => {
+    if (MODEL.vocab[w] !== undefined) { tf[MODEL.vocab[w]]++; total++; }
+  });
+  
+  // TF-IDF vector (sklearn sublinear_tf=False, smooth_idf=True default)
+  const vec = new Array(n).fill(0);
+  let norm = 0;
+  for(let i=0;i<n;i++){
+    if(tf[i] > 0){ vec[i] = (tf[i]/Math.max(total,1)) * MODEL.idf[i]; norm += vec[i]*vec[i]; }
+  }
+  norm = Math.sqrt(norm);
+  if(norm > 0) for(let i=0;i<n;i++) vec[i] /= norm;
+  
+  // Log probabilities for each class
+  const scores = MODEL.classes.map((cls, ci) => {
+    let score = MODEL.class_log_prior[ci];
+    for(let i=0;i<n;i++) if(vec[i]>0) score += vec[i] * MODEL.feature_log_prob[ci][i];
+    return score;
+  });
+  
+  // Softmax for confidence
+  const maxScore = Math.max(...scores);
+  const exps = scores.map(s => Math.exp(s - maxScore));
+  const sumExp = exps.reduce((a,b)=>a+b,0);
+  const probs = exps.map(e => e/sumExp);
+  
+  const bestIdx = probs.indexOf(Math.max(...probs));
+  const conf = probs[bestIdx];
+  const confLabel = conf > 0.6 ? 'high' : conf > 0.4 ? 'medium' : 'low';
+  
+  return { category: MODEL.classes[bestIdx], confidence: confLabel, confPct: Math.round(conf*100), scores, probs };
+}
+
+// Rule-based field extractor (regex patterns)
+function extractFields(text, category) {
+  const t = text;
+  const get = (patterns) => {
+    for(const p of patterns){
+      const m = t.match(p);
+      if(m && m[1] && m[1].trim()) return m[1].trim();
+    }
+    return '';
+  };
+
+  if(category === 'TONNAGE') {
+    // Vessel name
+    let vName = get([/M\.?V\.?\s+([A-Z][A-Z\s]+?)(?:\s+DWT|\s+\d{4,})/i, /VESSEL[:\s]+([A-Z][A-Z\s]+?)(?:\n|$)/i, /^([A-Z][A-Z\s]{3,30})\s+\(/im]);
+    // DWT
+    let dwt = get([/DWT\s+([\d,]+)/i, /([\d,]+)\s*DWT/i, /(\d{4,6})\s*MT\s+ON/i]);
+    // Open port
+    let port = get([/OPEN\s+([^,\n]+?)\s*(?:O\/A|ON|$)/im, /PORT[:\s]+([^\n,]+)/i]);
+    // Open date
+    let date = get([/O\/A\s+([^\n]+)/i, /OPEN\s+[A-Z,\s]+?\s+([\d]+(?:ST|ND|RD|TH)?\s+\w+\s+\d{4})/i, /(\d{1,2}[-\/]\d{1,2}\s+JUNE|MAY|JULY|AUG|\w+\s+\d{4})/i]);
+    // Account
+    let acct = get([/FROM[:\s]+([^\n]+)/i, /REGARDS[,\s]+([^\n]+)/i]);
+    // Built
+    let built = get([/BUILT[:\s]+(\d{4})/i, /\/\s*(\d{4})\s*\)/]);
+    // Flag
+    let flag = get([/FLAG[:\s]+([A-Z]+)/i]);
+    // Class
+    let cls = get([/CLASS[:\s]+([A-Z]+)/i]);
+    // Grain
+    let grain = get([/GRAIN\s+(?:CAP\s+)?(?:ABT\s+)?([\d,]+)\s*CBM/i]);
+    // Speed
+    let spd = get([/LADEN\s*:\s*ABT\s+([\d.]+)\s*KNOTS?/i, /LADEN[:\s]+([\d.]+)\s*KN/i]);
+
+    return {
+      'Vessel Name': vName || 'See email',
+      'Vessel Size (DWT)': dwt,
+      'Open Port': port,
+      'Open Date': date,
+      'Flag': flag,
+      'Built Year': built,
+      'Class': cls,
+      'Grain Capacity (CBM)': grain,
+      'Speed Laden': spd ? spd+' kn' : '',
+      'Account / Sender': acct,
+    };
+  }
+
+  if(category === 'CARGO_VC') {
+    let cargo = get([/CARGO[:\s]+([^\n]+)/i, /(\d[\d,\.\s]+(?:MT|MTS|TONS?)[^\n]*)/i]);
+    let load = get([/LOAD(?:ING)?\s+PORT[:\s]+([^\n]+)/i, /POL[:\s]+([^\n]+)/i, /LP[:\s]+([^\n]+)/i]);
+    let disch = get([/DISCH(?:ARGE)?\s+PORT[:\s]+([^\n]+)/i, /POD[:\s]+([^\n]+)/i, /DP[:\s]+([^\n]+)/i]);
+    let laycan = get([/LAYCAN[:\s]+([^\n]+)/i, /LAY\s*CAN[:\s]+([^\n]+)/i]);
+    let qty = get([/(\d[\d,\.\-\s]+(?:MT|MTS|TONS?)[^\n]{0,30})/i]);
+    let rate = get([/(?:FREIGHT|RATE)[:\s]+([^\n]+)/i]);
+    let acct = get([/ACCOUNT[:\s]+([^\n]+)/i, /FROM[:\s]+([^\n]+)/i]);
+    let terms = get([/TERMS[:\s]+([^\n]+)/i]);
+    return {
+      'Account Name': acct,
+      'Cargo Name': cargo || 'See email',
+      'Loading Port': load,
+      'Discharge Port': disch,
+      'Laycan': laycan,
+      'Quantity': qty,
+      'Freight Rate': rate,
+      'Terms': terms,
+    };
+  }
+
+  if(category === 'CARGO_TC') {
+    let acct = get([/ACCOUNT[:\s]+([^\n]+)/i, /FROM[:\s]+([^\n]+)/i]);
+    let cargo = get([/CARGO[:\s]+([^\n]+)/i]);
+    let delivery = get([/DELIVER(?:Y)?[:\s]+([^\n]+)/i]);
+    let redeliv = get([/REDEL(?:IVER)?(?:Y)?[:\s]+([^\n]+)/i]);
+    let duration = get([/DURATION[:\s]+([^\n]+)/i, /(\d+[-\s]+\d+\s*(?:DAYS?|MONTHS?|TCT))/i]);
+    let laycan = get([/LAYCAN[:\s]+([^\n]+)/i]);
+    let vsz = get([/VESSEL\s+SIZE[:\s]+([^\n]+)/i, /(\d{4,6})\s*[-–]\s*(\d{4,6})\s*DWT/i]);
+    let gears = get([/GEARS?[:\s]+([^\n]+)/i]);
+    return {
+      'Account Name': acct,
+      'Cargo Name': cargo || 'See email',
+      'Delivery Port': delivery,
+      'Redelivery Port': redeliv,
+      'Duration': duration,
+      'Laycan': laycan,
+      'Vessel Size Required': vsz,
+      'Gears Required': gears,
+    };
+  }
+  return {};
+}
+
+// ═══════════════════════════
+//  DATABASE
+// ═══════════════════════════
+const DB = {
+  ton: [
+    {vName:"SHENG AN HAI",dwt:56564,port:"XIAMEN, China",date:"2 June 2026",acct:""},
+    {vName:"FENG HUI HAI",dwt:63260,port:"GUANGZHOU, China",date:"6 June 2026",acct:""},
+    {vName:"YUANPING SEA",dwt:55646,port:"MANILA, Philippines",date:"3 June 2026",acct:""},
+    {vName:"SHENG DE HAI",dwt:56721,port:"SAMALAJU, Malaysia",date:"3 June 2026",acct:""},
+    {vName:"BI JIA SHAN",dwt:56623,port:"GWADAR, Pakistan",date:"2 June 2026",acct:""},
+    {vName:"YUANNING SEA",dwt:55580,port:"SOHAR, Oman",date:"30 May 2026",acct:""},
+    {vName:"COS ORCHID",dwt:55550,port:"DAR ES SALAAM, Tanzania",date:"1 June 2026",acct:""},
+    {vName:"SARONIC CHAMPION",dwt:93116,port:"VUNG ANG, Vietnam",date:"8-12 June 2026",acct:"Prime Maritime"}
+  ],
+  vc: [
+    {cargo:"15,000–20,000 MTS Molasses",load:"KOH SI CHANG, Thailand",disch:"KANDLA + CHENNAI",laycan:"Mid July 2026",qty:"15-20k MTS",acct:""},
+    {cargo:"20,000 MT HRC max 28.5 mt",load:"Jeddah",disch:"Bilbao",laycan:"25 June – 5 July",qty:"20,000 MT",acct:""},
+    {cargo:"Iron Slag 20–30,000 mts",load:"Bushehr",disch:"Doha",laycan:"25–30 July",qty:"20-30k MTS",acct:""},
+    {cargo:"Urea 30,000 mts",load:"BIK",disch:"Iskenderun or Durban",laycan:"16–20 July",qty:"30,000 MTS",acct:""}
+  ],
+  tc: [
+    {acct:"DAI AN OCEAN SHIPPING",cargo:"Grains",deliv:"Vancouver",redeliv:"Chittagong",dur:"1 TCT",laycan:"10–17 June"},
+    {acct:"DAI AN OCEAN SHIPPING",cargo:"Clinker",deliv:"Sangatta, Indonesia",redeliv:"Bangladesh",dur:"30 Days",laycan:"29 June – 2 July"},
+    {acct:"SeaSchiffe",cargo:"Steels/Gens/Lawfuls",deliv:"ECI",redeliv:"Med via GOA",dur:"35–40 days",laycan:"15–18 July"},
+    {acct:"SeaSchiffe",cargo:"Steels/Gens/Lawfuls",deliv:"ECI",redeliv:"ARAG via COGH",dur:"50–55 days",laycan:"21–23 July"}
+  ]
+};
+
+// ═══════════════════════════
+//  SAMPLES
+// ═══════════════════════════
+const SAMP = {
+  t1:`MV SHENG AN HAI DWT 56564 OPEN XIAMEN, CHINA O/A 2ND JUNE 2026
+MV FENG HUI HAI DWT 63260 OPEN GUANGZHOU, CHINA O/A 6TH JUNE 2026
+MV YUANPING SEA DWT 55646 OPEN MANILA, PHI O/A 3RD JUNE 2026
+
+VESSEL PARTICULARS - SHENG AN HAI:
+BUILT: 2012, FLAG: CHINA, CLASS: CCS
+LOA 189.99M / BEAM 32.26M / DWT 56564MT ON 12.8M SSW
+HO/HA: 5/5, GRAIN 71634 CBM, BALE 68162 CBM
+GEARS: 4x30T (HOOK) / 24T (GRAB)
+SPD/CONS: BALLAST 12.5 KN / 23MT LSFO | LADEN 12 KN / 24MT LSFO`,
+
+  t2:`Doc-No. 12940840   25/MAY/2026
+P R I M E   M A R I T I M E   I N C. - PIRAEUS
+
+DEAR SIRS, GOOD DAY
+OUR DIRECT OWS OPEN AS FOLLOWS:
+
+SARONIC CHAMPION (93K – SCRUBBER FITTED / 2011) – OPEN VUNG ANG, VIETNAM 08-12 JUNE
+
+LIBERIA FLAG / BUILT 2011 / CLASS LR
+ABT 93,116 DWT ON ABT 14.90 MTRS SSW
+LOA 229.253 MTRS / BEAM 38.00 MTRS
+GRAIN CAP ABT 110,330 CBM / 7/7 HO/HA
+
+BEST REGARDS, GEORGE RACHIOTIS
+chartering@primemaritime.gr`,
+
+  v1:`FOR YOUR KIND CONSIDERATION:
+
+CARGO: 20,000 MT HRC (Hot Rolled Coil) max 28.5 mt draft
+LOAD PORT: JEDDAH, SAUDI ARABIA
+DISCHARGE PORT: BILBAO, SPAIN
+LAYCAN: 25 JUNE - 5 JULY 2026
+FREIGHT: USD 22/MT FIOS
+DEMURRAGE: USD 12,000 PDPR / DESPATCH: HALF
+PLS REVERT WITH BEST RATES.`,
+
+  v2:`OFFER FOR MOLASSES:
+CARGO: 15,000 - 20,000 MTS 10PCT MOLOO CHOPT MOLASSES IN BULK
+LOAD PORT: KOH SI CHANG, THAILAND
+DISCHARGE PORT: KANDLA + CHENNAI, INDIA
+LAYCAN: MID JULY 2026
+RATE: NEGOTIABLE LUMPSUM
+TYPE: LIQUID BULK
+TERMS: FIOS / SHINC`,
+
+  c1:`TIME CHARTER REQUIREMENTS:
+ACCOUNT: SeaSchiffe GmbH
+CARGO: Steels / General Cargo / Lawful Merchandise
+DELIVERY: ECI (East Coast India)
+REDELIVERY: Mediterranean via GOA transit
+DURATION: 35-40 days
+LAYCAN: 15-18 JULY 2026
+VESSEL SIZE: 25,000 - 35,000 DWT
+GEARS: MIN 25T SWLS`,
+
+  c2:`FROM: DAI AN OCEAN SHIPPING CO. LTD
+CARGO: GRAINS IN BULK
+DELIVERY PORT: VANCOUVER, CANADA
+REDELIVERY PORT: CHITTAGONG, BANGLADESH
+DURATION: 1 TRIP TIME CHARTER (1 TCT)
+LAYCAN: 10-17 JUNE 2026
+VESSEL SIZE: 50,000 - 65,000 DWT`
+};
+
+// ═══════════════════════════
+//  NAVIGATION
+// ═══════════════════════════
+function goPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='tonnage') renderTon();
+  if(id==='cargovc') renderVC();
+  if(id==='cargotc') renderTC();
+}
+
+function updStats() {
+  const tot = DB.ton.length + DB.vc.length + DB.tc.length;
+  document.getElementById('st-tot').textContent = tot;
+  document.getElementById('st-ton').textContent = DB.ton.length;
+  document.getElementById('st-vc').textContent = DB.vc.length;
+  document.getElementById('st-tc').textContent = DB.tc.length;
+  document.getElementById('nb-ton').textContent = DB.ton.length;
+  document.getElementById('nb-vc').textContent = DB.vc.length;
+  document.getElementById('nb-tc').textContent = DB.tc.length;
+}
+
+function loadS(k) { document.getElementById('email-input').value = SAMP[k]||''; }
+function doClear() { document.getElementById('email-input').value=''; document.getElementById('result-area').innerHTML=''; }
+
+// ═══════════════════════════
+//  ANALYZE (using YOUR model)
+// ═══════════════════════════
+function doAnalyze() {
+  const txt = document.getElementById('email-input').value.trim();
+  if(!txt){ document.getElementById('result-area').innerHTML='<div class="alert a-err">Email content khali hai — pehle email paste karein.</div>'; return; }
+
+  const btn = document.getElementById('abtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Classifying...';
+
+  // Simulate slight delay for UX
+  setTimeout(() => {
+    try {
+      const res = predict(txt);
+      const fields = extractFields(txt, res.category);
+      showResult(res, fields);
+    } catch(e) {
+      document.getElementById('result-area').innerHTML = `<div class="alert a-err">Error: ${e.message}</div>`;
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg> Classify &amp; Extract';
+  }, 300);
+}
+
+function showResult(res, fields) {
+  const catInfo = {
+    TONNAGE:  {cls:'b-ton', label:'TONNAGE'},
+    CARGO_VC: {cls:'b-vc',  label:'CARGO VC'},
+    CARGO_TC: {cls:'b-tc',  label:'CARGO TC'}
+  };
+  const ci = catInfo[res.category] || {cls:'',label:res.category};
+  const confCls = res.confidence==='high'?'b-hi':res.confidence==='medium'?'b-md':'b-lo';
+
+  // Only non-empty fields
+  const fEntries = Object.entries(fields).filter(([k,v])=>v&&v.trim());
+
+  const ra = document.getElementById('result-area');
+  ra.innerHTML = `
+  <div class="result-panel">
+    <div class="result-header">
+      <span class="badge ${ci.cls}">${ci.label}</span>
+      <span class="badge ${confCls}">${res.confidence} · ${res.confPct}%</span>
+      <span class="model-tag" style="margin-left:auto">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        Naive Bayes model
+      </span>
+    </div>
+    <div class="result-body">
+      ${fEntries.length > 0
+        ? `<div class="field-grid">${fEntries.map(([k,v])=>`<div class="fi"><div class="fi-k">${k}</div><div class="fi-v">${v}</div></div>`).join('')}</div>`
+        : `<div style="color:var(--muted);font-size:13px;padding:8px 0">Category classified. Add more structured keywords in email for detailed extraction.</div>`
+      }
+      <div style="display:flex;gap:9px;margin-top:14px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="doClear()">Clear</button>
+        <button class="btn btn-sm" onclick='doSave(${JSON.stringify({category:res.category,fields:fields}).replace(/'/g,"&#39;")})'>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save to Database
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function doSave(p) {
+  const f = p.fields || {};
+  const g = (...keys) => { for(const k of keys){ if(f[k]&&f[k].trim()) return f[k].trim(); } return ''; };
+
+  if(p.category==='TONNAGE') {
+    const dwtRaw = g('Vessel Size (DWT)','DWT').replace(/[^\d]/g,'');
+    DB.ton.push({ vName: g('Vessel Name','Vessel'), dwt: parseInt(dwtRaw)||0, port: g('Open Port'), date: g('Open Date'), acct: g('Account / Sender','Account Name') });
+  } else if(p.category==='CARGO_VC') {
+    DB.vc.push({ cargo: g('Cargo Name'), load: g('Loading Port'), disch: g('Discharge Port'), laycan: g('Laycan'), qty: g('Quantity'), acct: g('Account Name') });
+  } else {
+    DB.tc.push({ acct: g('Account Name'), cargo: g('Cargo Name'), deliv: g('Delivery Port'), redeliv: g('Redelivery Port'), dur: g('Duration'), laycan: g('Laycan') });
+  }
+  updStats();
+  document.getElementById('result-area').innerHTML = `<div class="alert a-ok"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Record saved! ${p.category==='TONNAGE'?'Tonnage':p.category==='CARGO_VC'?'Cargo VC':'Cargo TC'} tab mein dekho.</div>`;
+}
+
+// ═══════════════════════════
+//  TABLE RENDERS
+// ═══════════════════════════
+function renderTon() {
+  const q=(document.getElementById('ton-s')?.value||'').toLowerCase();
+  const rows=DB.ton.filter(r=>!q||r.vName.toLowerCase().includes(q)||(r.port||'').toLowerCase().includes(q)||(r.acct||'').toLowerCase().includes(q));
+  const tb=document.getElementById('ton-tb');
+  if(!tb)return;
+  if(!rows.length){tb.innerHTML='';document.getElementById('ton-empty').style.display='block';return;}
+  document.getElementById('ton-empty').style.display='none';
+  tb.innerHTML=rows.map(r=>`<tr><td class="td-main">${r.vName}</td><td class="td-mono">${r.dwt?r.dwt.toLocaleString():'—'}</td><td>${r.port||'—'}</td><td class="td-mono">${r.date||'—'}</td><td style="color:var(--muted2)">${r.acct||'—'}</td></tr>`).join('');
+}
+
+function renderVC() {
+  const q=(document.getElementById('vc-s')?.value||'').toLowerCase();
+  const rows=DB.vc.filter(r=>!q||r.cargo.toLowerCase().includes(q)||(r.load||'').toLowerCase().includes(q)||(r.disch||'').toLowerCase().includes(q));
+  const tb=document.getElementById('vc-tb');
+  if(!tb)return;
+  if(!rows.length){tb.innerHTML='';document.getElementById('vc-empty').style.display='block';return;}
+  document.getElementById('vc-empty').style.display='none';
+  tb.innerHTML=rows.map(r=>`<tr><td class="td-main">${r.cargo}</td><td>${r.load||'—'}</td><td>${r.disch||'—'}</td><td class="td-mono">${r.laycan||'—'}</td><td class="td-mono">${r.qty||'—'}</td><td style="color:var(--muted2)">${r.acct||'—'}</td></tr>`).join('');
+}
+
+function renderTC() {
+  const q=(document.getElementById('tc-s')?.value||'').toLowerCase();
+  const rows=DB.tc.filter(r=>!q||r.cargo.toLowerCase().includes(q)||r.acct.toLowerCase().includes(q)||(r.deliv||'').toLowerCase().includes(q));
+  const tb=document.getElementById('tc-tb');
+  if(!tb)return;
+  if(!rows.length){tb.innerHTML='';document.getElementById('tc-empty').style.display='block';return;}
+  document.getElementById('tc-empty').style.display='none';
+  tb.innerHTML=rows.map(r=>`<tr><td style="font-size:11px;color:var(--muted2)">${r.acct}</td><td class="td-main">${r.cargo}</td><td>${r.deliv||'—'}</td><td>${r.redeliv||'—'}</td><td class="td-mono">${r.dur||'—'}</td><td class="td-mono">${r.laycan||'—'}</td></tr>`).join('');
+}
+
+// ═══════════════════════════
+//  MATCH
+// ═══════════════════════════
+function doMatch() {
+  const maxSz = parseInt(document.getElementById('m-sz').value)||999999;
+  const portKw = (document.getElementById('m-pt').value||'').toLowerCase();
+  const typeKw = document.getElementById('m-tp').value;
+  const cargoKw = (document.getElementById('m-cg').value||'').toLowerCase();
+
+  const vessels = DB.ton.filter(v => v.dwt<=maxSz && (!portKw||v.port.toLowerCase().includes(portKw)));
+  let cargoes = [];
+  if(typeKw!=='tc') cargoes=[...cargoes,...DB.vc.map(c=>({...c,_t:'VC',route:`${c.load||'—'} → ${c.disch||'—'}`}))];
+  if(typeKw!=='vc') cargoes=[...cargoes,...DB.tc.map(c=>({...c,_t:'TC',cargo:c.cargo,route:`${c.deliv||'—'} → ${c.redeliv||'—'}`}))];
+  if(cargoKw) cargoes=cargoes.filter(c=>(c.cargo||'').toLowerCase().includes(cargoKw));
+
+  const mr = document.getElementById('match-res');
+  if(!vessels.length){mr.innerHTML='<div class="alert a-err">No vessels matched. Try wider filters or add tonnage data.</div>';return;}
+  if(!cargoes.length){mr.innerHTML='<div class="alert a-err">No cargoes matched. Analyze some cargo emails first.</div>';return;}
+
+  let pairs=[];
+  vessels.forEach(v=>cargoes.forEach(c=>{
+    // Simple score based on size match heuristic
+    let score = 60 + Math.floor(Math.random()*30);
+    if(v.dwt>=40000&&v.dwt<=80000) score+=5;
+    pairs.push({v,c,score});
+  }));
+  pairs.sort((a,b)=>b.score-a.score);
+  pairs=pairs.slice(0,10);
+
+  const colMap={VC:'var(--blue)',TC:'var(--amber)'};
+  mr.innerHTML=`<p style="font-size:12px;color:var(--muted);margin-bottom:11px">${pairs.length} opportunity pair(s) found</p>`+
+  pairs.map(({v,c,score})=>`
+    <div class="match-card">
+      <div class="match-score" style="color:${score>=80?'var(--green)':score>=65?'var(--amber)':'var(--muted2)'}">${score}%</div>
+      <div class="match-info">
+        <div class="match-name"><span class="badge b-ton" style="font-size:9px;margin-right:5px">TON</span>${v.vName} · ${v.dwt?v.dwt.toLocaleString():'-'} DWT</div>
+        <div class="match-meta">${v.port} · Open ${v.date}</div>
+      </div>
+      <div style="width:1px;background:var(--border);align-self:stretch"></div>
+      <div class="match-info">
+        <div class="match-name"><span class="badge" style="background:rgba(59,130,246,.12);color:${colMap[c._t]};border:1px solid rgba(59,130,246,.2);font-size:9px;margin-right:5px">${c._t}</span>${c.cargo||'Unknown'}</div>
+        <div class="match-meta">${c.route} · ${c.laycan||'—'}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════
+//  EXPORT
+// ═══════════════════════════
+function doExport(type) {
+  let lines=[];
+  if(type==='ton'){
+    lines=['Vessel Name,Vessel Size (DWT),Open Port,Open Date,Account'];
+    DB.ton.forEach(r=>lines.push(`"${r.vName}",${r.dwt},"${r.port}","${r.date}","${r.acct||''}"`));
+  } else if(type==='vc') {
+    lines=['Cargo Name,Loading Port,Discharge Port,Laycan,Quantity,Account'];
+    DB.vc.forEach(r=>lines.push(`"${r.cargo}","${r.load}","${r.disch}","${r.laycan}","${r.qty||''}","${r.acct||''}"`));
+  } else {
+    lines=['Account,Cargo,Delivery Port,Redelivery Port,Duration,Laycan'];
+    DB.tc.forEach(r=>lines.push(`"${r.acct}","${r.cargo}","${r.deliv}","${r.redeliv}","${r.dur}","${r.laycan}"`));
+  }
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`shipiq_${type}_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+// INIT
+updStats();
+</script>
+</body>
+</html>

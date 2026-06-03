@@ -1,0 +1,5 @@
+Account Name,Cargo Name,Delivery Port,Redelivery Port,Duration,Laycan,Category
+DAI AN OCEAN SHIPPING COMPANY LIMITED,Grains,Vancouver,Chittagong,1 TCT,10-17 June,CARGO_TC
+DAI AN OCEAN SHIPPING COMPANY LIMITED,Clinker,"Sangatta, Indonesia",Bangladesh,30 Days,29-2 June,CARGO_TC
+SeaSchiffe,Steels/Gens/Lawfuls,ECI,Med via GOA transit,35-40 days,15-18 July,CARGO_TC
+SeaSchiffe,Steels/Gens/Lawfuls,ECI,ARAG via COGH transit,50-55 days,21-23 July,CARGO_TC
